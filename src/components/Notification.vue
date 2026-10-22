@@ -9,7 +9,7 @@
     import { PUSHER_APP_KEY } from "@/services/configs/environment";
     import { PUSHER_BASE_URL } from "@/services/configs/environment";
     import { mapActions, mapMutations, mapGetters } from "vuex";
-    import store from  "@/store/index"
+    import store from "@/stores/index"
     
     export default {
       data() {
@@ -35,10 +35,19 @@
       methods: {
         // ...
         subscribe () {
+            const stored = JSON.parse(localStorage.getItem("authenticateUser") || "{}")
+            const user = stored.users || this.currentUser?.users || this.currentUser || {}
+            const secureId = user.id
+            if (!secureId) {
+                return
+            }
             let vm = this 
-            let token = store.getters['auths/GET_ACCESS_TOKEN'] // modules.auths?.getters?.GET_ACCESS_TOKEN(modules.auths.state)
-            if (token) {
-                token = token.slice(0, -1)
+            let token = stored.token
+            if (!token) {
+                token = store.getters['auths/GET_ACCESS_TOKEN'] // modules.auths?.getters?.GET_ACCESS_TOKEN(modules.auths.state)
+                if (token) {
+                    token = token.slice(0, -1)
+                }
             }
             const wsHost = (PUSHER_BASE_URL || "").replace(/^https?:\/\//, "").replace(/\/.*$/, "")
             var pusher = new Pusher(PUSHER_APP_KEY , {
@@ -58,7 +67,7 @@
                 }
             });
 
-            var channel = pusher.subscribe("private-notification." + this.currentUser?.id);
+            var channel = pusher.subscribe("private-notification." + secureId);
             
            
 
@@ -69,7 +78,7 @@
               const module = datas.module
               const texte = datas.texte
               //this.notifications = {module,texte}
-              vm.$toast.default(` ${module} : ${texte}`)
+              vm.$toast.info(` ${module} : ${texte}`)
 
               
             });
