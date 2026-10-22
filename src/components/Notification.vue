@@ -5,7 +5,6 @@
 </template>
 <script>
     import Pusher from 'pusher-js' 
-    import Echo from 'laravel-echo'
     import { API_BASE_URL, PUSHER_APP_CLUSTER } from "@/services/configs/environment";
     import { PUSHER_APP_KEY } from "@/services/configs/environment";
     import { PUSHER_BASE_URL } from "@/services/configs/environment";
@@ -38,14 +37,18 @@
         subscribe () {
             let vm = this 
             let token = store.getters['auths/GET_ACCESS_TOKEN'] // modules.auths?.getters?.GET_ACCESS_TOKEN(modules.auths.state)
+            if (token) {
+                token = token.slice(0, -1)
+            }
+            const wsHost = (PUSHER_BASE_URL || "").replace(/^https?:\/\//, "").replace(/\/.*$/, "")
             var pusher = new Pusher(PUSHER_APP_KEY , {
                 authEndpoint:  API_BASE_URL+ '/api/broadcasting/auth',
                 cluster: PUSHER_APP_CLUSTER,
                 encrypted: true,
-                forceTLS: false,
-                wsHost: PUSHER_BASE_URL,
-                wsPort: 6001,
-                wssPort: 6001,
+                forceTLS: true,
+                wsHost: wsHost,
+                wsPort: 443,
+                wssPort: 443,
                 disableStats: true,
                 enabledTransports: ['ws', 'wss'],
                 auth: {
